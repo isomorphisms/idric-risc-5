@@ -1,23 +1,28 @@
-# Idriç RISC-V backend
+# Idriç RISC-V follower backend
 
-Architecture-first follower backend for Idriç on 64-bit RISC-V.
+This repository follows accepted `Idric` semantics and ARM/Thumb-proven backend seams, fixtures, oracles, rejection boundaries, and verification structure. It uses RISC-V's own registers, comparisons, branches, ABI, encodings, and execution environment.
 
-ARM/Thumb remains the lead backend. This repository should copy compiler seams and executable test shapes only after they are established there, rather than opening a competing frontend/runtime design.
+Current status: architecture/ABI planning and instruction documentation; no RISC-V code generation is claimed yet.
 
-Current status: **architecture and ABI planning only; no RISC-V code generation is claimed yet.**
+## XLEN scope
 
-The first target boundary is deliberately narrow:
+The existing first hosted lane is deliberately:
 
 - RV64I, little-endian;
 - ELF64 RISC-V;
-- `LP64` integer/soft-float psABI;
+- LP64 integer/soft-float psABI;
 - Linux userspace;
-- no libc or runtime dependency for the first executable oracle.
+- no libc or general runtime for the first oracle.
 
-`ARCHITECTURE.md` records the pinned specifications, the distinction between complete architecture knowledge and emitted/tested instructions, and the deliberately tiny first executable surface.
+That tuple was selected by the prior assistant because it gives a cheap QEMU/Linux bootstrap. The user requested base-`I` follower work but did not choose RV64 as canonical, and an earlier embedded roadmap names RV32.
 
-First milestones:
+Therefore:
 
-1. #1 — pin ISA, psABI, and Linux userspace boundaries;
-2. #2 — build complete pinned architecture knowledge without treating it as backend support;
-3. #3 — bootstrap the first no-libc RV64I executable as an ARM follower.
+- issue #1 freezes only the hosted RV64 lane;
+- issue #3 owns its one-byte direct executable oracle;
+- issue #5 requires RV32I parity before the project claims a generic RISC-V backend;
+- XLEN applicability must remain explicit in architecture knowledge and lowering;
+- RV64-only `LD`, `SD`, `LWU`, `*W`, LP64, and ELF64 facts must not leak into shared IR.
+
+Complete architecture knowledge remains separate from `required`, `emitted`, and executable-`tested` support. RefC/C is not a fallback or backend stage.
+
