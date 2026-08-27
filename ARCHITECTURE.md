@@ -1,6 +1,12 @@
 # RISC-V architecture boundary
 
-This repository is intentionally a follower backend. ARM/Thumb establishes compiler seams, source-ABI choices, and executable fixture shapes first; RISC-V ports them after they are stable enough to copy.
+## Scope correction: hosted RV64 is one lane
+
+The existing RV64I + LP64 + ELF64 + Linux tuple was selected by the prior assistant as a cheap QEMU/Linux oracle. The user requested base-`I` follower work but did not choose 64-bit as canonical, and the earlier embedded roadmap names RV32. Issue #1 freezes only this hosted lane; issue #5 requires an RV32I parity lane before the project claims generic RISC-V.
+
+Keep XLEN explicit. RV64-only `LD`, `SD`, `LWU`, `*W`, LP64, ELF64, pointer-width, and data-model assumptions must not enter target-independent IR or RV32 lowering. RefC/C is not a fallback or backend stage.
+
+This repository is intentionally a follower backend. `Idric` owns target-independent language and checked-IR semantics; ARM/Thumb establishes proven backend seams, fixture shapes, oracles, rejection boundaries, and verification structure first. Each RISC-V lane owns its actual XLEN, ISA profile, ABI, object format, and execution environment.
 
 The central rule is that **knowing an instruction exists is not the same as supporting it in generated code**.
 
@@ -14,7 +20,7 @@ Normative architecture pin:
 - upstream release merge: `riscv/riscv-isa-manual@af9c6dee4218263d3006665b20c468f66d953f8d`
 - https://docs.riscv.org/reference/isa/v20260120/unpriv/unpriv-index.html
 
-The initial executable base is RV64I 2.1, XLEN=64, little-endian.
+The initial **hosted** executable base is RV64I 2.1, XLEN=64, little-endian.
 
 The rest of the ratified unprivileged manual is still architecture knowledge. `M`, `A`, floating point, compressed instructions, bit manipulation, vectors, half precision, and other extensions are not erased merely because the first backend does not emit them.
 
@@ -79,7 +85,7 @@ Do not replace these with one ambiguous `supported = true` flag.
 
 An instruction can be known while not required, emitted, or tested. A profile can require an instruction that a narrower target deliberately does not select. An emitted instruction is not considered finished until generated output has executable evidence.
 
-## Initial target tuple
+## Initial hosted target tuple
 
 ```text
 ISA:          RV64I 2.1
@@ -145,4 +151,4 @@ RISC-V-specific experiments may follow once the common Idriç semantics are exec
 3. **#3 Bootstrap the first no-libc RV64I executable as an ARM follower.**
    Compile one ordinary `main`, emit the tiny allow-list, inspect the object, run it under `qemu-riscv64`, and require exact output.
 
-After #3, port ARM-proven slices one at a time. Do not create a separate RISC-V frontend, runtime model, numeric representation, or source ABI unless a genuine architectural difference forces one.
+After #3, port ARM-proven slices one at a time. Issue #5 must add the RV32 counterpart before generic RISC-V is claimed. Do not create a separate RISC-V frontend, runtime model, or numeric representation; keep each lane's necessary ABI/XLEN differences target-local.
